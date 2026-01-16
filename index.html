@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Secuencia de Colores</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-traffic-light"></i> Control de Secuencia Vertical</h1>
+        
+        <!-- Círculos en vertical -->
+        <div class="vertical-circles">
+            <div class="circle-container">
+                <div class="circle" id="circle1" data-color="rojo"></div>
+                <span class="circle-label">Rojo</span>
+            </div>
+            <div class="circle-container">
+                <div class="circle" id="circle2" data-color="amarillo"></div>
+                <span class="circle-label">Amarillo 1</span>
+            </div>
+            <div class="circle-container">
+                <div class="circle" id="circle3" data-color="amarillo"></div>
+                <span class="circle-label">Amarillo 2</span>
+            </div>
+            <div class="circle-container">
+                <div class="circle" id="circle4" data-color="verde"></div>
+                <span class="circle-label">Verde</span>
+            </div>
+        </div>
+
+        <!-- Controles -->
+        <div class="controls">
+            <div class="buttons">
+                <button id="redButton" class="btn red-btn">
+                    <i class="fas fa-play"></i> Botón Rojo
+                    <span class="btn-subtitle">Activa amarillos</span>
+                </button>
+                <button id="greenButton" class="btn green-btn">
+                    <i class="fas fa-forward"></i> Botón Verde
+                    <span class="btn-subtitle">Inicia secuencia</span>
+                </button>
+            </div>
+
+            <!-- Configuración de tiempos -->
+          <div class="config-panel">
+    <h3><i class="fas fa-cog"></i> Configuración</h3>
+    
+    <div class="config-item">
+        <label for="waitRange">
+            <i class="fas fa-clock"></i> Tiempo máximo espera entre voz y beeps:
+            <span id="waitValue">1-10</span> segundos
+        </label>
+        <div class="range-container">
+            <input type="range" id="waitRange" min="1" max="10" step="1" value="3">
+            <div class="range-labels">
+                <span>1s</span>
+                <span>5s</span>
+                <span>10s</span>
+            </div>
+        </div>
+        <p class="range-info"><i class="fas fa-info-circle"></i> El tiempo real será aleatorio entre 1 y el valor máximo seleccionado</p>
+    </div>
+
+    <div class="config-item">
+        <label for="duration">
+            <i class="fas fa-hourglass-half"></i> Duración activación círculos:
+            <span id="durationValue">4</span> segundos
+        </label>
+        <div class="range-container">
+            <input type="range" id="duration" min="1" max="10" step="1" value="4">
+            <div class="range-labels">
+                <span>1s</span>
+                <span>5s</span>
+                <span>10s</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <!-- Control de volumen -->
+            <div class="volume-control">
+                <h3><i class="fas fa-volume-up"></i> Control de Volumen</h3>
+                <div class="volume-slider">
+                    <i class="fas fa-volume-mute"></i>
+                    <input type="range" id="volume" min="0" max="1" step="0.1" value="0.7">
+                    <i class="fas fa-volume-up"></i>
+                    <span id="volumeValue">70%</span>
+                </div>
+            </div>
+
+            <!-- Estado actual -->
+            <div class="status-panel">
+                <h3><i class="fas fa-chart-line"></i> Estado del Sistema</h3>
+                <div class="status-info">
+                    <div class="status-item">
+                        <span class="status-label">Estado actual:</span>
+                        <span id="currentStatus" class="status-value idle">Listo</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Tiempo de espera:</span>
+                        <span id="waitTime" class="status-value">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Círculos activos:</span>
+                        <span id="activeCircles" class="status-value">0/4</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio -->
+    <audio id="redSound" preload="auto">
+        <source src="sounds/red-sound.mp3" type="audio/mpeg">
+        Tu navegador no soporta audio HTML5
+    </audio>
+    <audio id="greenSound" preload="auto">
+        <source src="sounds/voz.aac" type="audio/mpeg">
+        Tu navegador no soporta audio HTML5
+    </audio>
+    <audio id="beepSound" preload="auto">
+        <source src="sounds/beep.mp3" type="audio/mpeg">
+        Tu navegador no soporta audio HTML5
+    </audio>
+
+    <footer>
+        <p><i class="fas fa-code"></i> Sistema de Control de Secuencia | Todos los círculos se apagan simultáneamente</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
