@@ -291,13 +291,15 @@ body {
 /* Semáforo rectangular */
 .traffic-light {
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 25px;
-    border-radius: 15px;
+    gap: 10px;
+    /* Reducido para más velocidad */
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(20, 20, 20, 0.8);
+    border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -308,30 +310,26 @@ body {
 .light {
     width: 100%;
     height: 100px;
-    background: rgba(30, 30, 30, 0.8);
-    /* Fondo oscuro cuando está apagado */
-    border-radius: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 25px;
-    transition: all 0.3s ease;
+    /* Altura reducida para mejor rendimiento */
+    background: #0f0f0f;
+    /* Color sólido, sin transparencias costosas */
+    border-radius: 8px;
+    border: 2px solid #222222;
+    /* Borde sólido, sin rgba */
     position: relative;
     overflow: hidden;
+
+    /* ELIMINAR TODAS LAS TRANSICIONES Y ANIMACIONES */
+    transition: none !important;
+    animation: none !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
-.light::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: currentColor;
-    opacity: 0;
-    transition: opacity 0.3s ease, box-shadow 0.3s ease;
-    z-index: 1;
+.light::before,
+.light::after {
+    display: none !important;
+    /* Eliminar gradientes y efectos costosos */
 }
 
 .light.active::before {
@@ -348,20 +346,29 @@ body {
 }
 
 .light#light1.active {
-    color: #ff3838;
-    /* Rojo brillante */
+    background-color: #ff0000 !important;
+    border-color: #ff0000 !important;
+    /* ELIMINAR box-shadow si es lento, usar solo si necesario */
+    box-shadow: 0 0 20px #ff0000;
 }
 
 
-.light#light2.active,
+.light#light2.active {
+    background-color: #ffff00 !important;
+    border-color: #ffff00 !important;
+    box-shadow: 0 0 20px #ffff00;
+}
+
 .light#light3.active {
-    color: #ffdd59;
-    /* Amarillo brillante */
+    background-color: #ffff00 !important;
+    border-color: #ffff00 !important;
+    box-shadow: 0 0 20px #ffff00;
 }
 
 .light#light4.active {
-    color: #32ff7e;
-    /* Verde brillante */
+    background-color: #00ff00 !important;
+    border-color: #00ff00 !important;
+    box-shadow: 0 0 20px #00ff00;
 }
 
 /* Efecto de pulso para los activos */
@@ -579,6 +586,14 @@ body {
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .container {
@@ -595,8 +610,15 @@ body {
     }
 
     .light {
-        height: 200px;
-        padding: 0 20px;
+        box-shadow: none !important;
+        /* Eliminar sombras en móviles */
+        height: 100px;
+        /* Más pequeño en móviles */
+    }
+
+    .light.active {
+        /* En móviles, solo cambiar color de fondo */
+        box-shadow: none !important;
     }
 
     .main-btn {
@@ -620,7 +642,7 @@ body {
     }
 
     .light {
-        height: 200px;
+        height: 100px;
         padding: 0 15px;
     }
 

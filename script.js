@@ -250,121 +250,130 @@ document.addEventListener("DOMContentLoaded", function () {
       await startSequence();
     }
   }
+  function playAudioFast(audio) {
+    return new Promise((resolve) => {
+      // Resetear y configurar
+      audio.currentTime = 0;
+      audio.volume = config.volume;
 
+      // Intentar reproducir SIN manejo complejo de promesas
+      try {
+        audio
+          .play()
+          .then(() => {
+            // Resolver inmediatamente, NO esperar onended
+            // Esto hace que los beeps sean consecutivos
+            resolve();
+          })
+          .catch(() => {
+            // Si falla, continuar de inmediato
+            resolve();
+          });
+      } catch (error) {
+        // Si hay error, continuar
+        resolve();
+      }
+    });
+  }
+  function activateLight(index) {
+    // Usar requestAnimationFrame para sincronizar con render
+    requestAnimationFrame(() => {
+      lights[index].classList.add("active");
+    });
+  }
+  function deactivateAllLights() {
+    requestAnimationFrame(() => {
+      lights.forEach((light) => light.classList.remove("active"));
+    });
+  }
   // FUNCIÓN PRINCIPAL CORREGIDA - SECUENCIA PASO A PASO
   async function startSequence() {
     if (isRunning) return;
 
     isRunning = true;
+    stopRequested = false;
+
+    // Cambiar botón inmediatamente
     mainButton.classList.add("stop");
     mainButton.innerHTML =
       '<i class="fas fa-stop"></i><span class="btn-text">DETENER</span>';
+
     cancelAutoStart();
 
     try {
-      // PASO 1: DESACTIVAR TODAS LAS LUCES
+      // 1. APAGAR TODAS LAS LUCES
       deactivateAllLights();
-      console.log("PASO 1: Luces desactivadas");
 
-      // PASO 2: REPRODUCIR VOZ COMPLETA Y ESPERAR
-      console.log("PASO 2: Reproduciendo voz...");
+      // 2. REPRODUCIR VOZ (esperar a que termine)
       await playAudioAndWait(greenSound);
-      console.log("Voz completada");
+      if (stopRequested) return;
 
-      // PASO 3: ESPERAR INTERVALO ALEATORIO
-      const randomWait = Math.floor(Math.random() * config.waitTimeMax) + 1;
-      console.log(`PASO 3: Esperando ${randomWait} segundos...`);
-      await delay(randomWait * 1000);
+      // 3. ESPERA ALEATORIA
+      const waitTime =
+        (Math.floor(Math.random() * config.waitTimeMax) + 1) * 1000;
+      await delay(waitTime);
+      if (stopRequested) return;
 
-      // PASO 4: REPRODUCIR 3 BEEPS CON LUCES
-      console.log("PASO 4: Iniciando beeps...");
-      for (let i = 0; i < 3; i++) {
-        if (!isRunning) break;
+      // 4. SECUENCIA RÁPIDA DE BEEPS (COMO PARTIDOR REAL)
+      // Beep 1 - Luz Roja (INSTANTÁNEO)
+        activateLight(0);
+        playAudioFast(beepSound);
+        if (stopRequested) return;
+        await delay(100);
+      // Beep 2 - Luz Amarillo 1 (INSTANTÁNEO)
+        activateLight(1);
+        playAudioFast(beepSound);
+        if (stopRequested) return;
+        await delay(100);
 
-        // Activar luz correspondiente
-        setLightActive(lights[i], true);
+      // Beep 3 - Luz Amarillo 2 (INSTANTÁNEO)
+        activateLight(2);
+        playAudioFast(beepSound);
+        if (stopRequested) return;
+        await delay(100);
 
-        // Reproducir beep
-        await playAudioAndWait(beepSound);
+      // Beep Final - Luz Verde (INSTANTÁNEO)
+        activateLight(3);
+        playAudioFast(beepFinalound);
+        if (stopRequested) return;
+        // await delay(200);
 
-        // Pequeña pausa entre beeps (excepto después del último)
-        // if (i < 2 && isRunning) {
-        //   await delay(0);
-        // }
-      }
+      // 5. MANTENER LUCES
+      await delay(config.circleDuration);
+      if (stopRequested) return;
 
-      // PASO 5: CUARTO BEEP FINAL CON LUZ VERDE
-      if (isRunning) {
-        console.log("PASO 5: Beep final...");
-        setLightActive(lights[3], true);
-        await playAudioAndWait(beepFinalSound);
-      }
-
-      // PASO 6: MANTENER LUCES ACTIVAS
-      if (isRunning) {
-        console.log(`PASO 6: Manteniendo luces por ${config.circleDuration}ms`);
-        await delay(config.circleDuration);
-      }
-
-      // PASO 7: APAGAR LUCES
-      console.log("PASO 7: Apagando luces...");
+      // 6. APAGAR
       deactivateAllLights();
     } catch (error) {
-      console.error("Error en secuencia:", error);
+      console.error("Error:", error);
     } finally {
       if (isRunning) {
         stopSequence();
       }
 
       if (config.autoStart) {
-        setTimeout(() => startAutoStart(), 1000);
+        setTimeout(startAutoStart, 1000);
       }
     }
   }
-
   // FUNCIÓN AUXILIAR PARA REPRODUCIR AUDIO Y ESPERAR
-  function playAudioAndWait(audioElement) {
+  function playAudioAndWait(audio) {
     return new Promise((resolve) => {
-      if (!isRunning) {
-        resolve();
-        return;
-      }
+      audio.currentTime = 0;
+      audio.volume = config.volume;
 
-      audioElement.currentTime = 0;
-
-      // Intentar reproducir
-      const playPromise = audioElement.play();
-
+      const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            // Esperar a que termine naturalmente
-            audioElement.onended = () => {
-              audioElement.onended = null;
-              resolve();
-            };
-
-            // // Timeout de seguridad por si el audio no termina
-            // setTimeout(() => {
-            //   if (audioElement.onended) {
-            //     audioElement.pause();
-            //     audioElement.currentTime = 0;
-            //     audioElement.onended = null;
-            //     resolve();
-            //   }
-            // }, 7000); // Máximo 7 segundos por sonido
+            // Para voz SÍ esperamos
+            audio.onended = resolve;
           })
-          .catch((error) => {
-            console.log("Audio omitido:", error.message);
-            // Si falla, simular duración aproximada
-            setTimeout(resolve, 1000);
+          .catch(() => {
+            resolve(); // Si falla, continuar
           });
       } else {
-        // Para navegadores antiguos
-        audioElement.onended = () => {
-          audioElement.onended = null;
-          resolve();
-        };
+        audio.onended = resolve;
       }
     });
   }
