@@ -1,161 +1,204 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Niño Training</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
     <!-- Botón de Configuración -->
     <button id="configToggle" class="config-toggle">
-        <i class="fas fa-cog"></i>
+      <i class="fas fa-cog"></i>
     </button>
 
     <!-- Panel de Configuración -->
     <div id="configPanel" class="config-panel">
-        <div class="config-header">
-            <h3><i class="fas fa-sliders-h"></i> Configuración</h3>
-            <button id="closeConfig" class="close-btn">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <div class="config-content">
-            <!-- Tiempo de espera -->
-            <div class="config-item">
-                <label for="waitRange">
-                    <i class="fas fa-clock"></i> Espera máximo (1-10s):
-                    <span class="config-value" id="waitValue">3s</span>
-                </label>
-                <input type="range" id="waitRange" min="1" max="10" step="1" value="3">
-            </div>
+      <div class="config-header">
+        <h3><i class="fas fa-sliders-h"></i> Configuración</h3>
+        <button id="closeConfig" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
 
-            <!-- Duración de círculos -->
-            <div class="config-item">
-                <label for="duration">
-                    <i class="fas fa-hourglass-half"></i> Duración (1-10s):
-                    <span class="config-value" id="durationValue">4s</span>
-                </label>
-                <input type="range" id="duration" min="1" max="10" step="1" value="4">
-            </div>
-
-            <!-- Auto inicio -->
-            <div class="config-item">
-                <label for="autoStart">
-                    <i class="fas fa-play-circle"></i> Auto inicio:
-                    <span class="config-value" id="autoStartValue">Desactivado</span>
-                </label>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="autoStart" class="toggle-input">
-                    <label for="autoStart" class="toggle-label"></label>
-                </div>
-            </div>
-
-            <!-- Tiempo auto inicio -->
-            <div class="config-item" id="autoTimeContainer">
-                <label>
-                    <i class="fas fa-stopwatch"></i> Tiempo auto inicio:
-                </label>
-                <div class="time-inputs">
-                    <div class="time-input">
-                        <span>Minutos:</span>
-                        <input type="number" id="autoMinutes" min="0" max="10" value="0" class="spinbox">
-                    </div>
-                    <div class="time-input">
-                        <span>Segundos:</span>
-                        <input type="number" id="autoSeconds" min="0" max="59" value="0" class="spinbox">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Volumen -->
-            <div class="config-item">
-                <label for="volume">
-                    <i class="fas fa-volume-up"></i> Volumen:
-                    <span class="config-value" id="volumeValue">70%</span>
-                </label>
-                <input type="range" id="volume" min="0" max="1" step="0.1" value="0.7">
-            </div>
+      <div class="config-content">
+        <!-- Tiempo de espera -->
+        <div class="config-item">
+          <label for="waitRange">
+            <i class="fas fa-clock"></i> Espera máximo (1-10s):
+            <span class="config-value" id="waitValue">3s</span>
+          </label>
+          <input
+            type="range"
+            id="waitRange"
+            min="1"
+            max="10"
+            step="1"
+            value="3"
+          />
         </div>
 
-        <div class="config-footer">
-            <button id="saveConfig" class="btn config-btn">
-                <i class="fas fa-save"></i> Guardar
-            </button>
+        <!-- Duración de círculos -->
+        <div class="config-item">
+          <label for="duration">
+            <i class="fas fa-hourglass-half"></i> Duración (1-10s):
+            <span class="config-value" id="durationValue">4s</span>
+          </label>
+          <input
+            type="range"
+            id="duration"
+            min="1"
+            max="10"
+            step="1"
+            value="3"
+          />
         </div>
+
+        <!-- Auto inicio -->
+        <div class="config-item">
+          <label for="autoStart">
+            <i class="fas fa-play-circle"></i> Auto inicio:
+            <span class="config-value" id="autoStartValue">Desactivado</span>
+          </label>
+          <div class="toggle-switch">
+            <input type="checkbox" id="autoStart" class="toggle-input" />
+            <label for="autoStart" class="toggle-label"></label>
+          </div>
+        </div>
+
+        <!-- Tiempo auto inicio -->
+        <div class="config-item" id="autoTimeContainer">
+          <label> <i class="fas fa-stopwatch"></i> Tiempo auto inicio: </label>
+          <div class="time-inputs">
+            <div class="time-input">
+              <span>Minutos:</span>
+              <input
+                type="number"
+                id="autoMinutes"
+                min="0"
+                max="10"
+                value="0"
+                class="spinbox"
+              />
+            </div>
+            <div class="time-input">
+              <span>Segundos:</span>
+              <input
+                type="number"
+                id="autoSeconds"
+                min="0"
+                max="59"
+                value="0"
+                class="spinbox"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Volumen -->
+        <div class="config-item">
+          <label for="volume">
+            <i class="fas fa-volume-up"></i> Volumen:
+            <span class="config-value" id="volumeValue">70%</span>
+          </label>
+          <input
+            type="range"
+            id="volume"
+            min="0"
+            max="1"
+            step="0.1"
+            value="0.7"
+          />
+        </div>
+      </div>
+
+      <div class="config-footer">
+        <button id="saveConfig" class="btn config-btn">
+          <i class="fas fa-save"></i> Guardar
+        </button>
+      </div>
     </div>
 
     <!-- Contenido principal -->
     <div class="container">
-        <!-- Título -->
-        <header class="app-header">
-            <!-- <h1><i class="fas fa-child"></i> Niño Training</h1> -->
-             <a target="_blank" href="https://www.facebook.com/profile.php?id=61582007349039">
-                <img src="image/ninotraininglinealnegro.png" alt="Logo Niño Training" class="logo-img" >
-            </a>
-        </header>
+      <!-- Título -->
+      <header class="app-header">
+        <!-- <h1><i class="fas fa-child"></i> Niño Training</h1> -->
+        <a
+          target="_blank"
+          href="https://www.facebook.com/profile.php?id=61582007349039"
+        >
+          <img
+            src="image/ninotraininglinealnegro.png"
+            alt="Logo Niño Training"
+            class="logo-img"
+          />
+        </a>
+      </header>
 
-        <!-- Semáforo rectangular -->
-        <div class="traffic-light">
-            <div class="light-container">
-                <div class="light" id="light1" data-color="rojo">
-                </div>
-            </div>
-            <div class="light-container">
-                <div class="light" id="light2" data-color="amarillo">
-                </div>
-            </div>
-            <div class="light-container">
-                <div class="light" id="light3" data-color="amarillo">
-                </div>
-            </div>
-            <div class="light-container">
-                <div class="light" id="light4" data-color="verde">
-                </div>
-            </div>
+      <!-- Semáforo rectangular -->
+      <div class="traffic-light">
+        <div class="light-container">
+          <div class="light" id="light1" data-color="rojo"></div>
         </div>
+        <div class="light-container">
+          <div class="light" id="light2" data-color="amarillo"></div>
+        </div>
+        <div class="light-container">
+          <div class="light" id="light3" data-color="amarillo"></div>
+        </div>
+        <div class="light-container">
+          <div class="light" id="light4" data-color="verde"></div>
+        </div>
+      </div>
 
-        <!-- Botón principal -->
-        <div class="main-control">
-            <button id="mainButton" class="btn main-btn">
-                <i class="fas fa-play"></i>
-                <span class="btn-text">INICIAR</span>
-            </button>
-            
-            <!-- Temporizador auto inicio (oculto por defecto) -->
-            <div id="autoTimer" class="auto-timer">
-                <div class="timer-display">
-                    <i class="fas fa-hourglass-half"></i>
-                    <span id="timerValue">01:00</span>
-                </div>
-                <button id="cancelAuto" class="btn cancel-btn">
-                    <i class="fas fa-times-circle"></i> Cancelar
-                </button>
-            </div>
+      <!-- Botón principal -->
+      <div class="main-control">
+        <button id="mainButton" class="btn main-btn">
+          <i class="fas fa-play"></i>
+          <span class="btn-text">INICIAR</span>
+        </button>
+
+        <!-- Temporizador auto inicio (oculto por defecto) -->
+        <div id="autoTimer" class="auto-timer">
+          <div class="timer-display">
+            <i class="fas fa-hourglass-half"></i>
+            <span id="timerValue">01:00</span>
+          </div>
+          <button id="cancelAuto" class="btn cancel-btn">
+            <i class="fas fa-times-circle"></i> Cancelar
+          </button>
         </div>
+      </div>
     </div>
 
     <!-- Audio -->
     <audio id="greenSound" preload="auto">
-        <source src="sounds/voz.aac" type="audio/mpeg">
+      <source src="sounds/voz.aac" type="audio/mpeg" />
     </audio>
     <audio id="beepSound" preload="auto">
-        <source src="sounds/beep.mp3" type="audio/mpeg">
+      <source src="sounds/beep.mp3" type="audio/mpeg" />
     </audio>
     <audio id="beepFinalound" preload="auto">
-        <source src="sounds/sonidoFinal.aac" type="audio/mpeg">
+      <source src="sounds/sonidoFinal.aac" type="audio/mpeg" />
     </audio>
     <!-- Footer -->
     <footer class="app-footer">
-        <p>Hecho por
-        <a href="https://api.whatsapp.com/send?phone=59175057204" target="_blank">
-             <span class="author">Kevin Delgadillo</span>
+      <p>
+        Hecho por
+        <a
+          href="https://api.whatsapp.com/send?phone=59175057204"
+          target="_blank"
+        >
+          <span class="author">Kevin Delgadillo</span>
         </a>
-        </p>
+      </p>
     </footer>
 
     <script src="script.js"></script>
-</body>
+  </body>
 </html>

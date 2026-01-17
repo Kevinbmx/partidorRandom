@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Elementos de audio
   const greenSound = document.getElementById("greenSound");
   const beepSound = document.getElementById("beepSound");
-  const beepFinalound = document.getElementById("beepFinalound");
+  const beepFinalSound = document.getElementById("beepFinalound");
 
   // Elementos de configuración
   const waitRange = document.getElementById("waitRange");
@@ -36,19 +36,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Variables de estado
   let isRunning = false;
-  let isAutoStartActive = false;
-  let autoStartTimeout = null;
   let currentAutoTime = 0;
   let autoStartInterval = null;
 
   // Configuración
   let config = {
-    waitTimeMax: 3, // 1-10 segundos
-    circleDuration: 4000, // 4 segundos por defecto
+    waitTimeMax: 3,
+    circleDuration: 3000,
     volume: 0.7,
     autoStart: false,
     autoMinutes: 0,
-    autoSeconds: 5,
+    autoSeconds: 0,
   };
 
   // Inicializar
@@ -58,14 +56,13 @@ document.addEventListener("DOMContentLoaded", function () {
     updateUI();
     setupAudio();
 
-    // Iniciar auto start si está activado
     if (config.autoStart) {
       startAutoStart();
     }
 
     console.log("Sistema Niño Training iniciado");
   }
-  // Cargar configuración
+
   function loadConfig() {
     const savedConfig = localStorage.getItem("ninoTrainingConfig");
     if (savedConfig) {
@@ -73,40 +70,27 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Guardar configuración
   function saveConfigToStorage() {
     localStorage.setItem("ninoTrainingConfig", JSON.stringify(config));
   }
 
-  // Configurar eventos
   function setupEventListeners() {
-    // Botón principal
     mainButton.addEventListener("click", toggleSequence);
-
-    // Panel de configuración
-    configToggle.addEventListener("click", () => {
-      configPanel.classList.add("active");
-    });
-
-    closeConfig.addEventListener("click", () => {
-      configPanel.classList.remove("active");
-    });
-
+    configToggle.addEventListener("click", () =>
+      configPanel.classList.add("active")
+    );
+    closeConfig.addEventListener("click", () =>
+      configPanel.classList.remove("active")
+    );
     saveConfig.addEventListener("click", saveConfiguration);
-
-    // Controles de configuración
     waitRange.addEventListener("input", updateWaitRange);
     durationControl.addEventListener("input", updateDuration);
     volumeControl.addEventListener("input", updateVolume);
-
     autoStartToggle.addEventListener("change", toggleAutoStart);
     autoMinutes.addEventListener("change", updateAutoTime);
     autoSeconds.addEventListener("change", updateAutoTime);
-
-    // Cancelar auto inicio
     cancelAuto.addEventListener("click", cancelAutoStart);
 
-    // Cerrar panel al hacer clic fuera
     document.addEventListener("click", (e) => {
       if (
         !configPanel.contains(e.target) &&
@@ -118,160 +102,61 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Configurar audio
   function setupAudio() {
     greenSound.volume = config.volume;
     beepSound.volume = config.volume;
+    beepFinalSound.volume = config.volume;
 
-    // Precargar audios inmediatamente
+    // Cargar audios inmediatamente
     greenSound.load();
     beepSound.load();
+    beepFinalSound.load();
 
-    // Estado de audio habilitado
-    let audioEnabled = false;
-
-    // Función para habilitar audio definitivamente
+    // Habilitar audio
     function enableAudio() {
-      if (audioEnabled) return;
-
-      audioEnabled = true;
-      console.log("Audio habilitado");
-
-      // Reproducir y pausar inmediatamente para desbloquear
       const silentAudio = new Audio();
       silentAudio.volume = 0;
-
-      // Crear un buffer de audio vacío
-      const context = new (window.AudioContext || window.webkitAudioContext)();
-      const source = context.createBufferSource();
-      source.buffer = context.createBuffer(1, 1, 22050);
-      source.connect(context.destination);
-      source.start(0);
-
-      // También intentar con un audio normal
       silentAudio
         .play()
-        .then(() => {
-          silentAudio.pause();
-          console.log("Audio completamente desbloqueado");
-        })
-        .catch((e) => console.log("Silent audio falló:", e));
+        .then(() => silentAudio.pause())
+        .catch(() => {});
     }
 
-    // Habilitar audio con cualquier interacción
-    function handleUserInteraction() {
-      enableAudio();
-      // Remover listeners después de la primera interacción
-      document.removeEventListener("click", handleUserInteraction);
-      document.removeEventListener("touchstart", handleUserInteraction);
-      document.removeEventListener("keydown", handleUserInteraction);
-    }
-
-    // Escuchar múltiples tipos de interacción
-    document.addEventListener("click", handleUserInteraction, { once: true });
-    document.addEventListener("touchstart", handleUserInteraction, {
-      once: true,
-    });
-    document.addEventListener("keydown", handleUserInteraction, { once: true });
-
-    // También escuchar clics específicos en elementos importantes
     mainButton.addEventListener("click", enableAudio, { once: true });
-    configToggle.addEventListener("click", enableAudio, { once: true });
-
-    // Modificar la función playSound para manejar mejor el audio
-    window.playSound = async function (audio) {
-      if (!isRunning) return;
-
-      return new Promise((resolve) => {
-        audio.currentTime = 0;
-
-        // Intentar reproducir con manejo de errores mejorado
-        const playPromise = audio.play();
-
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              audio.onended = () => {
-                audio.onended = null;
-                resolve();
-              };
-            })
-            .catch((error) => {
-              console.error("Error reproduciendo sonido:", error);
-
-              // Si falla por política de autoplay, esperar un momento y reintentar
-              if (error.name === "NotAllowedError") {
-                setTimeout(() => {
-                  enableAudio();
-                  audio
-                    .play()
-                    .then(() => {
-                      audio.onended = () => {
-                        audio.onended = null;
-                        resolve();
-                      };
-                    })
-                    .catch((e) => {
-                      console.error("Reintento falló:", e);
-                      resolve(); // Continuar de todos modos
-                    });
-                }, 100);
-              } else {
-                resolve(); // Continuar a pesar del error
-              }
-            });
-        } else {
-          // Para navegadores antiguos
-          audio.onended = () => {
-            audio.onended = null;
-            resolve();
-          };
-        }
-      });
-    };
   }
-  // Actualizar UI con configuración
+
   function updateUI() {
     waitRange.value = config.waitTimeMax;
     waitValue.textContent = `${config.waitTimeMax}s`;
-
     durationControl.value = config.circleDuration / 1000;
     durationValue.textContent = `${config.circleDuration / 1000}s`;
-
     volumeControl.value = config.volume;
     volumeValue.textContent = `${Math.round(config.volume * 100)}%`;
-
     autoStartToggle.checked = config.autoStart;
     autoStartValue.textContent = config.autoStart ? "Activado" : "Desactivado";
-
     autoMinutes.value = config.autoMinutes;
     autoSeconds.value = config.autoSeconds;
-
     autoTimeContainer.style.display = config.autoStart ? "block" : "none";
   }
 
-  // Actualizar rango de espera
   function updateWaitRange() {
     config.waitTimeMax = parseInt(waitRange.value);
     waitValue.textContent = `${config.waitTimeMax}s`;
   }
 
-  // Actualizar duración
   function updateDuration() {
     config.circleDuration = parseInt(durationControl.value) * 1000;
     durationValue.textContent = `${durationControl.value}s`;
   }
 
-  // Actualizar volumen
   function updateVolume() {
     config.volume = parseFloat(volumeControl.value);
     volumeValue.textContent = `${Math.round(config.volume * 100)}%`;
     greenSound.volume = config.volume;
     beepSound.volume = config.volume;
-    beepFinalound.volume = config.volume;
+    beepFinalSound.volume = config.volume;
   }
 
-  // Alternar auto inicio
   function toggleAutoStart() {
     config.autoStart = autoStartToggle.checked;
     autoStartValue.textContent = config.autoStart ? "Activado" : "Desactivado";
@@ -284,35 +169,27 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Actualizar tiempo auto inicio
   function updateAutoTime() {
     config.autoMinutes = parseInt(autoMinutes.value) || 0;
     config.autoSeconds = parseInt(autoSeconds.value) || 0;
-
-    // Validar valores
     if (config.autoMinutes < 0) config.autoMinutes = 0;
     if (config.autoMinutes > 10) config.autoMinutes = 10;
     if (config.autoSeconds < 0) config.autoSeconds = 0;
     if (config.autoSeconds > 59) config.autoSeconds = 59;
-
     autoMinutes.value = config.autoMinutes;
     autoSeconds.value = config.autoSeconds;
   }
 
-  // Iniciar auto inicio
   function startAutoStart() {
     if (!config.autoStart || isRunning) return;
+    cancelAutoStart();
 
-    cancelAutoStart(); // Cancelar cualquier temporizador existente
-
-    // Calcular tiempo total en segundos
     currentAutoTime = config.autoMinutes * 60 + config.autoSeconds;
+    if (currentAutoTime === 0) currentAutoTime = 0;
 
-    // Mostrar temporizador
     autoTimer.classList.add("active");
     updateTimerDisplay();
 
-    // Iniciar cuenta regresiva
     autoStartInterval = setInterval(() => {
       currentAutoTime--;
       updateTimerDisplay();
@@ -321,12 +198,10 @@ document.addEventListener("DOMContentLoaded", function () {
         clearInterval(autoStartInterval);
         autoTimer.classList.remove("active");
 
-        // Iniciar secuencia automáticamente
         if (!isRunning) {
           startSequence();
         }
 
-        // Reiniciar auto inicio si sigue activado
         if (config.autoStart) {
           setTimeout(() => startAutoStart(), 1000);
         }
@@ -334,23 +209,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 1000);
   }
 
-  // Cancelar auto inicio
   function cancelAutoStart() {
     if (autoStartInterval) {
       clearInterval(autoStartInterval);
       autoStartInterval = null;
     }
-
-    if (autoStartTimeout) {
-      clearTimeout(autoStartTimeout);
-      autoStartTimeout = null;
-    }
-
     autoTimer.classList.remove("active");
     currentAutoTime = 0;
   }
 
-  // Actualizar display del temporizador
   function updateTimerDisplay() {
     const minutes = Math.floor(currentAutoTime / 60);
     const seconds = currentAutoTime % 60;
@@ -359,17 +226,14 @@ document.addEventListener("DOMContentLoaded", function () {
       .padStart(2, "0")}`;
   }
 
-  // Guardar configuración
   function saveConfiguration() {
     updateWaitRange();
     updateDuration();
     updateVolume();
     updateAutoTime();
-
     saveConfigToStorage();
     configPanel.classList.remove("active");
 
-    // Reiniciar auto inicio si está activado
     if (config.autoStart) {
       startAutoStart();
     } else {
@@ -379,7 +243,6 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Configuración guardada:", config);
   }
 
-  // Alternar secuencia (iniciar/detener)
   async function toggleSequence() {
     if (isRunning) {
       stopSequence();
@@ -388,7 +251,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Iniciar secuencia
+  // FUNCIÓN PRINCIPAL CORREGIDA - SECUENCIA PASO A PASO
   async function startSequence() {
     if (isRunning) return;
 
@@ -396,38 +259,55 @@ document.addEventListener("DOMContentLoaded", function () {
     mainButton.classList.add("stop");
     mainButton.innerHTML =
       '<i class="fas fa-stop"></i><span class="btn-text">DETENER</span>';
-
-    // Cancelar auto inicio temporalmente
     cancelAutoStart();
 
     try {
-      // Desactivar todas las luces
+      // PASO 1: DESACTIVAR TODAS LAS LUCES
       deactivateAllLights();
+      console.log("PASO 1: Luces desactivadas");
 
-      // Paso 1: Reproducir sonido verde
-      await playSound(greenSound);
+      // PASO 2: REPRODUCIR VOZ COMPLETA Y ESPERAR
+      console.log("PASO 2: Reproduciendo voz...");
+      await playAudioAndWait(greenSound);
+      console.log("Voz completada");
 
-      // Paso 2: Espera aleatoria (1 a waitTimeMax segundos)
-      const randomWait = getRandomWaitTime();
-      await wait(randomWait);
+      // PASO 3: ESPERAR INTERVALO ALEATORIO
+      const randomWait = Math.floor(Math.random() * config.waitTimeMax) + 1;
+      console.log(`PASO 3: Esperando ${randomWait} segundos...`);
+      await delay(randomWait * 1000);
 
-      // Paso 3: Reproducir 4 beeps y activar luces
-      for (let i = 0; i < 4; i++) {
-        if (!isRunning) break; // Verificar si se detuvo
-        if (i != 3) {
-          await playSound(beepSound);
-          // await wait(0); // Pequeña pausa entre beeps
-        }
+      // PASO 4: REPRODUCIR 3 BEEPS CON LUCES
+      console.log("PASO 4: Iniciando beeps...");
+      for (let i = 0; i < 3; i++) {
+        if (!isRunning) break;
+
+        // Activar luz correspondiente
         setLightActive(lights[i], true);
-      }
-      await playSound(beepFinalound);
 
-      // Paso 4: Mantener todas activas por circleDuration
+        // Reproducir beep
+        await playAudioAndWait(beepSound);
+
+        // Pequeña pausa entre beeps (excepto después del último)
+        // if (i < 2 && isRunning) {
+        //   await delay(0);
+        // }
+      }
+
+      // PASO 5: CUARTO BEEP FINAL CON LUZ VERDE
       if (isRunning) {
-        await wait(config.circleDuration);
+        console.log("PASO 5: Beep final...");
+        setLightActive(lights[3], true);
+        await playAudioAndWait(beepFinalSound);
       }
 
-      // Paso 5: Desactivar todas las luces
+      // PASO 6: MANTENER LUCES ACTIVAS
+      if (isRunning) {
+        console.log(`PASO 6: Manteniendo luces por ${config.circleDuration}ms`);
+        await delay(config.circleDuration);
+      }
+
+      // PASO 7: APAGAR LUCES
+      console.log("PASO 7: Apagando luces...");
       deactivateAllLights();
     } catch (error) {
       console.error("Error en secuencia:", error);
@@ -436,64 +316,65 @@ document.addEventListener("DOMContentLoaded", function () {
         stopSequence();
       }
 
-      // Reactivar auto inicio si está configurado
       if (config.autoStart) {
-        startAutoStart();
+        setTimeout(() => startAutoStart(), 1000);
       }
     }
   }
 
-  // Detener secuencia
-  function stopSequence() {
-    isRunning = false;
-    mainButton.classList.remove("stop");
-    mainButton.innerHTML =
-      '<i class="fas fa-play"></i><span class="btn-text">INICIAR</span>';
-
-    // Detener sonidos
-    greenSound.pause();
-    greenSound.currentTime = 0;
-    beepSound.pause();
-    beepSound.currentTime = 0;
-    beepFinalound.pause();
-    beepFinalound.currentTime = 0;
-
-    // Detener temporizadorSound.pause();
-    beepSound.currentTime = 0;
-    // Desactivar todas las luces
-    deactivateAllLights();
-  }
-
-  // Funciones auxiliares
-  function getRandomWaitTime() {
-    const waitSeconds = Math.floor(Math.random() * config.waitTimeMax) + 1;
-    return waitSeconds * 1000;
-  }
-
-  function wait(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  async function playSound(audio) {
-    if (!isRunning) return;
-
+  // FUNCIÓN AUXILIAR PARA REPRODUCIR AUDIO Y ESPERAR
+  function playAudioAndWait(audioElement) {
     return new Promise((resolve) => {
-      audio.currentTime = 0;
-      const playPromise = audio.play();
+      if (!isRunning) {
+        resolve();
+        return;
+      }
+
+      audioElement.currentTime = 0;
+
+      // Intentar reproducir
+      const playPromise = audioElement.play();
 
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            audio.onended = resolve;
+            // Esperar a que termine naturalmente
+            audioElement.onended = () => {
+              audioElement.onended = null;
+              resolve();
+            };
+
+            // // Timeout de seguridad por si el audio no termina
+            // setTimeout(() => {
+            //   if (audioElement.onended) {
+            //     audioElement.pause();
+            //     audioElement.currentTime = 0;
+            //     audioElement.onended = null;
+            //     resolve();
+            //   }
+            // }, 7000); // Máximo 7 segundos por sonido
           })
           .catch((error) => {
-            console.error("Error reproduciendo sonido:", error);
-            resolve(); // Continuar a pesar del error
+            console.log("Audio omitido:", error.message);
+            // Si falla, simular duración aproximada
+            setTimeout(resolve, 1000);
           });
+      } else {
+        // Para navegadores antiguos
+        audioElement.onended = () => {
+          audioElement.onended = null;
+          resolve();
+        };
       }
     });
   }
 
+  // FUNCIÓN AUXILIAR PARA DELAY
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // FUNCIONES PARA MANEJAR LUCES
   function setLightActive(light, active) {
     if (active) {
       light.classList.add("active");
@@ -504,10 +385,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function deactivateAllLights() {
     lights.forEach((light) => {
-      setLightActive(light, false);
+      light.classList.remove("active");
     });
   }
 
-  // Inicializar aplicación
+  // DETENER SECUENCIA
+  function stopSequence() {
+    isRunning = false;
+    mainButton.classList.remove("stop");
+    mainButton.innerHTML =
+      '<i class="fas fa-play"></i><span class="btn-text">INICIAR</span>';
+
+    // Detener todos los sonidos
+    greenSound.pause();
+    greenSound.currentTime = 0;
+    beepSound.pause();
+    beepSound.currentTime = 0;
+    beepFinalSound.pause();
+    beepFinalSound.currentTime = 0;
+
+    // Apagar luces
+    deactivateAllLights();
+  }
+
+  // INICIAR APLICACIÓN
   init();
 });
