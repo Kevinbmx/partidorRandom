@@ -6,499 +6,634 @@
 }
 
 body {
-    background: linear-gradient(135deg, #0c2461 0%, #1e3799 100%);
-    color: #fff;
+    background: #000000;
+    color: #ffffff;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     padding: 20px;
-    overflow-x: hidden;
+    position: relative;
 }
 
-.container {
-    max-width: 800px;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(15px);
-    border-radius: 25px;
-    padding: 30px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+/* Botón de configuración flotante */
+.config-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: all 0.3s ease;
 }
 
-h1 {
-    text-align: center;
+.config-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+/* Panel de configuración */
+.config-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 350px;
+    height: 100vh;
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    z-index: 999;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+
+.config-panel.active {
+    right: 0;
+}
+
+.config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 30px;
-    color: #fffa65;
-    text-shadow: 0 2px 15px rgba(255, 250, 101, 0.4);
-    font-size: 2.2rem;
     padding-bottom: 15px;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-}
-h2 {
-    text-align: center;
-    /* margin-bottom: 30px; */
-}
-h1 i {
-    margin-right: 15px;
-    animation: pulse 2s infinite;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
-
-    100% {
-        transform: scale(1);
-    }
+.config-header h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* Círculos verticales */
-.vertical-circles {
+.close-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.close-btn:hover {
+    opacity: 1;
+}
+
+.config-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 25px;
-    margin: 40px auto;
-    padding: 30px;
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    max-width: 400px;
 }
 
-.circle-container {
+.config-item {
     display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.config-item label {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    gap: 20px;
+    font-size: 0.95rem;
+    color: #cccccc;
+}
+
+.config-item label i {
+    margin-right: 10px;
+    color: #4dabf7;
+}
+
+.config-value {
+    color: #4dabf7;
+    font-weight: bold;
+}
+
+.config-item input[type="range"] {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.config-item input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #4dabf7;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #000000;
+}
+
+/* Toggle switch */
+.toggle-switch {
+    position: relative;
+    width: 60px;
+    height: 30px;
+    margin-top: 5px;
+}
+
+.toggle-input {
+    display: none;
+}
+
+.toggle-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 60px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.toggle-label::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    background: #666;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.toggle-input:checked+.toggle-label {
+    background: #4dabf7;
+}
+
+.toggle-input:checked+.toggle-label::after {
+    transform: translateX(30px);
+    background: #ffffff;
+}
+
+/* Time inputs */
+.time-inputs {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.time-input {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+}
+
+.time-input span {
+    font-size: 0.85rem;
+    color: #aaaaaa;
+}
+
+.spinbox {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    color: #ffffff;
+    padding: 8px 12px;
+    font-size: 1rem;
     width: 100%;
 }
 
-.circle {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    border: 6px solid rgba(255, 255, 255, 0.25);
-    background: rgba(255, 255, 255, 0.05);
-    transition: all 0.3s ease;
-    box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.5);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.spinbox:focus {
+    outline: none;
+    border-color: #4dabf7;
 }
 
-.circle::after {
-    content: attr(data-color);
-    position: absolute;
-    font-size: 0.9rem;
-    font-weight: bold;
-    opacity: 0.7;
-}
-
-.circle.active {
-    transform: scale(1.15);
-    border-width: 8px;
-    /* Eliminar sombra externa inicial y activar todo el círculo */
-    animation: glow 0.5s ease-out forwards;
-}
-
-@keyframes glow {
-    0% {
-        box-shadow:
-            inset 0 0 25px rgba(0, 0, 0, 0.5),
-            0 0 10px currentColor;
-    }
-
-    100% {
-        box-shadow:
-            inset 0 0 50px rgba(255, 255, 255, 0.8),
-            0 0 40px currentColor,
-            0 0 80px currentColor;
-    }
-}
-
-
-.circle#circle1.active {
-    background: #ff3838 !important;
-    border-color: #ff3838 !important;
-    color: #ff3838 !important;
-}
-
-.circle#circle2.active,
-.circle#circle3.active {
-    background: #ffdd59 !important;
-    border-color: #ffdd59 !important;
-    color: #ffdd59 !important;
-}
-
-.circle#circle4.active {
-    background: #32ff7e !important;
-    border-color: #32ff7e !important;
-    color: #32ff7e !important;
-}
-
-.circle-label {
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: #ddd;
-    min-width: 100px;
-    text-align: left;
-}
-/* Controles */
-.controls {
+/* Botones de configuración */
+.config-footer {
     margin-top: 30px;
-}
-
-.buttons {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn {
-    padding: 20px 35px;
-    font-size: 1.3rem;
+    padding: 12px 24px;
     border: none;
-    border-radius: 15px;
+    border-radius: 8px;
     cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.config-btn {
+    background: #4dabf7;
+    color: #000000;
+    width: 100%;
+}
+
+.config-btn:hover {
+    background: #339af0;
+}
+
+.logo-img {
+    width: 300px;
+}
+
+/* Contenedor principal */
+.container {
+    max-width: 600px;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    /* gap: 40px; */
+}
+
+/* Header */
+.app-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.app-header h1 {
+    font-size: 2.5rem;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    min-width: 200px;
-    color: white;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    gap: 15px;
+}
+
+.app-header h1 i {
+    color: #4dabf7;
+}
+
+/* Semáforo rectangular */
+.traffic-light {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.light-container {
+    width: 100%;
+}
+
+.light {
+    width: 100%;
+    height: 100px;
+    background: rgba(30, 30, 30, 0.8);
+    /* Fondo oscuro cuando está apagado */
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 25px;
+    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
-.btn:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-.btn i {
-    font-size: 2.2rem;
-    margin-bottom: 10px;
-}
-
-.btn-subtitle {
-    font-size: 0.9rem;
-    opacity: 0.9;
-    margin-top: 5px;
-    font-weight: 500;
-}
-
-.red-btn {
-    background: linear-gradient(135deg, #ff3838 0%, #ff6b6b 100%);
-}
-
-.red-btn:hover {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ff3838 100%);
-    box-shadow: 0 15px 30px rgba(255, 56, 56, 0.4);
-}
-
-.green-btn {
-    background: linear-gradient(135deg, #32ff7e 0%, #1dd1a1 100%);
-}
-
-.green-btn:hover {
-    background: linear-gradient(135deg, #1dd1a1 0%, #32ff7e 100%);
-    box-shadow: 0 15px 30px rgba(50, 255, 126, 0.4);
-}
-
-/* Configuración */
-.config-panel {
-    background: rgba(255, 255, 255, 0.07);
-    padding: 25px;
-    border-radius: 15px;
-    margin-bottom: 25px;
-    border-left: 5px solid #ffdd59;
-}
-
-.config-panel h3 {
-    color: #ffdd59;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.config-item {
-    margin-bottom: 25px;
-}
-
-.config-item label {
-    display: block;
-    margin-bottom: 12px;
-    font-weight: 600;
-    color: #ddd;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.config-item label i {
-    color: #ffdd59;
-}
-
-.range-container {
-    background: rgba(0, 0, 0, 0.2);
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.range-container input[type="range"] {
+.light::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 12px;
-    -webkit-appearance: none;
-    background: linear-gradient(90deg, #ff3838, #ffdd59, #32ff7e);
-    border-radius: 10px;
-    outline: none;
-    margin: 15px 0;
+    height: 100%;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1;
 }
 
-.range-container input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 25px;
-    height: 25px;
-    background: #fff;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 3px solid #0c2461;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+.light.active::before {
+    opacity: 1;
+    /* Cambiado de 0.15 a 1 para llenar completo */
 }
 
-.range-labels {
-    display: flex;
-    justify-content: space-between;
-    color: #aaa;
-    font-size: 0.9rem;
-    margin-top: 5px;
+.light.active {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 40px currentColor,
+        0 0 80px currentColor,
+        inset 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
-.info-box {
-    background: rgba(50, 255, 126, 0.1);
-    padding: 15px;
-    border-radius: 10px;
-    border-left: 4px solid #32ff7e;
-    margin-top: 20px;
-}
-
-.info-box p {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #ddd;
-    font-size: 0.95rem;
-}
-
-.info-box i {
-    color: #32ff7e;
-}
-
-/* Control de volumen */
-.volume-control {
-    background: rgba(255, 255, 255, 0.07);
-    padding: 25px;
-    border-radius: 15px;
-    margin-bottom: 25px;
-    border-left: 5px solid #4b7bec;
-}
-
-.volume-control h3 {
-    color: #4b7bec;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.volume-slider {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.volume-slider i {
-    font-size: 1.5rem;
-    color: #ddd;
-}
-
-.volume-slider input[type="range"] {
-    flex: 1;
-    height: 10px;
-    -webkit-appearance: none;
-    background: linear-gradient(90deg, #ff3838, #ffdd59, #32ff7e);
-    border-radius: 5px;
-    outline: none;
-}
-
-.volume-slider input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 22px;
-    height: 22px;
-    background: #4b7bec;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 3px solid #fff;
-}
-
-#volumeValue {
-    font-weight: bold;
-    min-width: 50px;
-    color: #4b7bec;
-}
-
-/* Estado del sistema */
-.status-panel {
-    background: rgba(255, 255, 255, 0.07);
-    padding: 25px;
-    border-radius: 15px;
-    border-left: 5px solid #ff6b6b;
-}
-
-.status-panel h3 {
-    color: #ff6b6b;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.status-info {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.status-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
-}
-
-.status-label {
-    color: #ddd;
-    font-weight: 500;
-}
-
-.status-value {
-    font-weight: bold;
-    padding: 5px 15px;
-    border-radius: 20px;
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.status-value.idle {
-    color: #32ff7e;
-}
-
-.status-value.active {
-    color: #ffdd59;
-    animation: blink 1s infinite;
-}
-
-.status-value.running {
+.light#light1.active {
     color: #ff3838;
+    /* Rojo brillante */
 }
 
-@keyframes blink {
+
+.light#light2.active,
+.light#light3.active {
+    color: #ffdd59;
+    /* Amarillo brillante */
+}
+
+.light#light4.active {
+    color: #32ff7e;
+    /* Verde brillante */
+}
+
+/* Efecto de pulso para los activos */
+@keyframes pulse-glow {
 
     0%,
     100% {
         opacity: 1;
+        box-shadow: 0 0 40px currentColor,
+            0 0 80px currentColor,
+            inset 0 0 20px rgba(255, 255, 255, 0.3);
     }
 
     50% {
-        opacity: 0.7;
+        opacity: 0.9;
+        box-shadow: 0 0 50px currentColor,
+            0 0 100px currentColor,
+            inset 0 0 30px rgba(255, 255, 255, 0.4);
     }
 }
 
-footer {
-    margin-top: 30px;
+/* Aplicar pulso solo cuando están todos activos (opcional) */
+.traffic-light.all-active .light.active {
+    animation: pulse-glow 2s infinite;
+}
+
+/* Para mejor visibilidad del texto en colores claros */
+.light#light2.active .light-label,
+.light#light3.active .light-label {
+    color: #000000;
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.7);
+}
+
+/* Efecto de gradiente para más profundidad (opcional) */
+.light.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0.2) 0%,
+            rgba(255, 255, 255, 0) 30%,
+            rgba(0, 0, 0, 0.1) 70%,
+            rgba(0, 0, 0, 0.2) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.light-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #cccccc;
+    z-index: 1;
+}
+
+.light.active .light-label {
+    color: #ffffff;
+    text-shadow: 0 0 10px currentColor;
+}
+
+/* Versión SUPER brillante - si quieres que sea muy intenso */
+.light.active {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 50px currentColor,
+        0 0 100px currentColor,
+        0 0 150px currentColor,
+        inset 0 0 30px rgba(255, 255, 255, 0.5);
+}
+
+/* Efecto de resplandor interior */
+.light.active::before {
+    opacity: 1;
+    background: radial-gradient(ellipse at center,
+            rgba(255, 255, 255, 0.8) 0%,
+            currentColor 70%,
+            rgba(0, 0, 0, 0.1) 100%);
+}
+
+/* Para colores específicos más vibrantes */
+.light#light1.active {
+    color: #ff0000;
+    /* Rojo puro */
+}
+
+.light#light2.active,
+.light#light3.active {
+    color: #ffff00;
+    /* Amarillo puro */
+}
+
+.light#light4.active {
+    color: #00ff00;
+    /* Verde puro */
+}
+
+/* Botón principal */
+.main-control {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.main-btn {
+    width: 100%;
+    height: 100px;
+    background: #32ff7e;
+    color: #000000;
+    font-size: 1.3rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.main-btn:hover:not(:disabled) {
+    background: #2ed573;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(50, 255, 126, 0.3);
+}
+
+.main-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.main-btn.stop {
+    background: #ff3838;
+}
+
+.main-btn.stop:hover:not(:disabled) {
+    background: #ff4d4d;
+    box-shadow: 0 10px 20px rgba(255, 56, 56, 0.3);
+}
+
+.main-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-text {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Temporizador auto inicio */
+.auto-timer {
+    display: none;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     text-align: center;
-    color: #aaa;
+    animation: fadeIn 0.3s ease;
+}
+
+.auto-timer.active {
+    display: block;
+}
+
+.timer-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    color: #4dabf7;
+}
+
+.timer-display i {
+    font-size: 1.5rem;
+}
+
+.cancel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    width: 100%;
+}
+
+.cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Footer */
+.app-footer {
+    margin-top: 40px;
+    text-align: center;
+    color: #888888;
     font-size: 0.9rem;
     padding: 20px;
     width: 100%;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-footer i {
-    margin-right: 10px;
-    color: #ffdd59;
+.author {
+    color: #4dabf7;
+    font-weight: 600;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Responsive */
 @media (max-width: 768px) {
     .container {
+        gap: 30px;
+    }
+
+    .app-header h1 {
+        font-size: 2rem;
+    }
+
+    .traffic-light {
         padding: 20px;
+        gap: 12px;
     }
 
-    h1 {
-        font-size: 1.8rem;
-    }
-
-    .buttons {
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .btn {
-        width: 100%;
-        max-width: 300px;
-    }
-
-    .vertical-circles {
-        padding: 20px;
-        margin: 20px auto;
-    }
-
-    .circle {
-        width: 80px;
+    .light {
         height: 80px;
+        padding: 0 20px;
     }
 
-    .circle-label {
-        font-size: 1rem;
-        min-width: 80px;
+    .main-btn {
+        height: 80px;
+        font-size: 1.2rem;
+    }
+
+    .config-panel {
+        width: 100%;
+        right: -100%;
+    }
+
+    .config-panel.active {
+        right: 0;
     }
 }
 
 @media (max-width: 480px) {
-    .circle {
-        width: 70px;
+    .app-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .light {
         height: 70px;
+        padding: 0 15px;
     }
 
-    .circle-label {
-        font-size: 0.9rem;
-        min-width: 70px;
+    .main-btn {
+        height: 70px;
+        font-size: 1.1rem;
     }
 
-    .config-panel,
-    .volume-control,
-    .status-panel {
-        padding: 15px;
+    .config-toggle {
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
     }
 }

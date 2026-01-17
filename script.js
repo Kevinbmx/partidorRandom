@@ -1,377 +1,513 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Elementos DOM
-    const circles = [
-        document.getElementById('circle1'),  // Rojo
-        document.getElementById('circle2'),  // Amarillo 1
-        document.getElementById('circle3'),  // Amarillo 2
-        document.getElementById('circle4')   // Verde
-    ];
-    
-    const redButton = document.getElementById('redButton');
-    const greenButton = document.getElementById('greenButton');
-    const redSound = document.getElementById('redSound');
-    const greenSound = document.getElementById('greenSound');
-    const beepSound = document.getElementById('beepSound');
-    
-    // Elementos de configuración
-    const waitRange = document.getElementById('waitRange');
-    const waitValue = document.getElementById('waitValue');
-    const durationControl = document.getElementById('duration');
-    const durationValue = document.getElementById('durationValue');
-    const volumeControl = document.getElementById('volume');
-    const volumeValue = document.getElementById('volumeValue');
-    
-    // Elementos de estado
-    const currentStatus = document.getElementById('currentStatus');
-    const waitTime = document.getElementById('waitTime');
-    const activeCirclesElement = document.getElementById('activeCircles');
-    
-    // Variables de configuración
-    let waitTimeMin = 1;  // Valor mínimo del rango
-    let waitTimeMax = 3; // Valor máximo del rango (cambiado a 10 como solicitas)
-    let circleDuration = 4000;  // 4 segundos por defecto
-    let isSequenceRunning = false;
-    let activeCircles = 0;
-    
-    // Inicializar valores
-    function initValues() {
-        // Configurar rango de espera (1-10 segundos)
-        updateWaitRange();
-        
-        // Configurar duración de círculos
-        durationControl.value = circleDuration / 1000;
-        durationValue.textContent = durationControl.value;
-        durationControl.addEventListener('input', function() {
-            circleDuration = this.value * 1000;
-            durationValue.textContent = this.value;
-        });
-        
-        // Configurar volumen
-        redSound.volume = volumeControl.value;
-        greenSound.volume = volumeControl.value;
-        beepSound.volume = volumeControl.value;
-        volumeValue.textContent = `${Math.round(volumeControl.value * 100)}%`;
-        
-        volumeControl.addEventListener('input', function() {
-            const volume = this.value;
-            redSound.volume = volume;
-            greenSound.volume = volume;
-            beepSound.volume = volume;
-            volumeValue.textContent = `${Math.round(volume * 100)}%`;
-        });
-        
-        // Actualizar estado inicial
-        updateActiveCircles();
-        updateStatus('idle', 'Listo');
+document.addEventListener("DOMContentLoaded", function () {
+  // Elementos DOM
+  const lights = [
+    document.getElementById("light1"), // Rojo
+    document.getElementById("light2"), // Amarillo 1
+    document.getElementById("light3"), // Amarillo 2
+    document.getElementById("light4"), // Verde
+  ];
+
+  const mainButton = document.getElementById("mainButton");
+  const configToggle = document.getElementById("configToggle");
+  const configPanel = document.getElementById("configPanel");
+  const closeConfig = document.getElementById("closeConfig");
+  const saveConfig = document.getElementById("saveConfig");
+
+  // Elementos de audio
+  const greenSound = document.getElementById("greenSound");
+  const beepSound = document.getElementById("beepSound");
+  const beepFinalound = document.getElementById("beepFinalound");
+
+  // Elementos de configuración
+  const waitRange = document.getElementById("waitRange");
+  const waitValue = document.getElementById("waitValue");
+  const durationControl = document.getElementById("duration");
+  const durationValue = document.getElementById("durationValue");
+  const volumeControl = document.getElementById("volume");
+  const volumeValue = document.getElementById("volumeValue");
+  const autoStartToggle = document.getElementById("autoStart");
+  const autoStartValue = document.getElementById("autoStartValue");
+  const autoMinutes = document.getElementById("autoMinutes");
+  const autoSeconds = document.getElementById("autoSeconds");
+  const autoTimeContainer = document.getElementById("autoTimeContainer");
+  const autoTimer = document.getElementById("autoTimer");
+  const timerValue = document.getElementById("timerValue");
+  const cancelAuto = document.getElementById("cancelAuto");
+
+  // Variables de estado
+  let isRunning = false;
+  let isAutoStartActive = false;
+  let autoStartTimeout = null;
+  let currentAutoTime = 0;
+  let autoStartInterval = null;
+
+  // Configuración
+  let config = {
+    waitTimeMax: 3, // 1-10 segundos
+    circleDuration: 4000, // 4 segundos por defecto
+    volume: 0.7,
+    autoStart: false,
+    autoMinutes: 0,
+    autoSeconds: 5,
+  };
+
+  // Inicializar
+  function init() {
+    loadConfig();
+    setupEventListeners();
+    updateUI();
+    setupAudio();
+
+    // Iniciar auto start si está activado
+    if (config.autoStart) {
+      startAutoStart();
     }
-    
-    // Actualizar rango de espera (1-10 segundos)
-    function updateWaitRange() {
-        waitTimeMin = 1;  // Siempre 1 segundo mínimo
-        waitTimeMax = parseInt(waitRange.value);  // Máximo configurable 1-10
-        waitValue.textContent = `${waitTimeMin}-${waitTimeMax}`;
+
+    console.log("Sistema Niño Training iniciado");
+  }
+  // Cargar configuración
+  function loadConfig() {
+    const savedConfig = localStorage.getItem("ninoTrainingConfig");
+    if (savedConfig) {
+      config = JSON.parse(savedConfig);
     }
-    
-    // Generar tiempo de espera aleatorio entre 1 y waitTimeMax
-    function getRandomWaitTime() {
-        const waitSeconds = Math.floor(Math.random() * (waitTimeMax - waitTimeMin + 1)) + waitTimeMin;
-        return waitSeconds * 1000; // Convertir a milisegundos
+  }
+
+  // Guardar configuración
+  function saveConfigToStorage() {
+    localStorage.setItem("ninoTrainingConfig", JSON.stringify(config));
+  }
+
+  // Configurar eventos
+  function setupEventListeners() {
+    // Botón principal
+    mainButton.addEventListener("click", toggleSequence);
+
+    // Panel de configuración
+    configToggle.addEventListener("click", () => {
+      configPanel.classList.add("active");
+    });
+
+    closeConfig.addEventListener("click", () => {
+      configPanel.classList.remove("active");
+    });
+
+    saveConfig.addEventListener("click", saveConfiguration);
+
+    // Controles de configuración
+    waitRange.addEventListener("input", updateWaitRange);
+    durationControl.addEventListener("input", updateDuration);
+    volumeControl.addEventListener("input", updateVolume);
+
+    autoStartToggle.addEventListener("change", toggleAutoStart);
+    autoMinutes.addEventListener("change", updateAutoTime);
+    autoSeconds.addEventListener("change", updateAutoTime);
+
+    // Cancelar auto inicio
+    cancelAuto.addEventListener("click", cancelAutoStart);
+
+    // Cerrar panel al hacer clic fuera
+    document.addEventListener("click", (e) => {
+      if (
+        !configPanel.contains(e.target) &&
+        !configToggle.contains(e.target) &&
+        configPanel.classList.contains("active")
+      ) {
+        configPanel.classList.remove("active");
+      }
+    });
+  }
+
+  // Configurar audio
+  function setupAudio() {
+    greenSound.volume = config.volume;
+    beepSound.volume = config.volume;
+
+    // Precargar audios inmediatamente
+    greenSound.load();
+    beepSound.load();
+
+    // Estado de audio habilitado
+    let audioEnabled = false;
+
+    // Función para habilitar audio definitivamente
+    function enableAudio() {
+      if (audioEnabled) return;
+
+      audioEnabled = true;
+      console.log("Audio habilitado");
+
+      // Reproducir y pausar inmediatamente para desbloquear
+      const silentAudio = new Audio();
+      silentAudio.volume = 0;
+
+      // Crear un buffer de audio vacío
+      const context = new (window.AudioContext || window.webkitAudioContext)();
+      const source = context.createBufferSource();
+      source.buffer = context.createBuffer(1, 1, 22050);
+      source.connect(context.destination);
+      source.start(0);
+
+      // También intentar con un audio normal
+      silentAudio
+        .play()
+        .then(() => {
+          silentAudio.pause();
+          console.log("Audio completamente desbloqueado");
+        })
+        .catch((e) => console.log("Silent audio falló:", e));
     }
-    
-    // Actualizar contador de círculos activos
-    function updateActiveCircles() {
-        activeCircles = circles.filter(circle => circle.classList.contains('active')).length;
-        activeCirclesElement.textContent = `${activeCircles}/4`;
+
+    // Habilitar audio con cualquier interacción
+    function handleUserInteraction() {
+      enableAudio();
+      // Remover listeners después de la primera interacción
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+      document.removeEventListener("keydown", handleUserInteraction);
     }
-    
-    // Actualizar estado del sistema
-    function updateStatus(type, message) {
-        currentStatus.textContent = message;
-        currentStatus.className = 'status-value ' + type;
-    }
-    
-    // Activar/desactivar círculos
-    function setCircleActive(circle, active) {
-        if (active) {
-            circle.classList.add('active');
+
+    // Escuchar múltiples tipos de interacción
+    document.addEventListener("click", handleUserInteraction, { once: true });
+    document.addEventListener("touchstart", handleUserInteraction, {
+      once: true,
+    });
+    document.addEventListener("keydown", handleUserInteraction, { once: true });
+
+    // También escuchar clics específicos en elementos importantes
+    mainButton.addEventListener("click", enableAudio, { once: true });
+    configToggle.addEventListener("click", enableAudio, { once: true });
+
+    // Modificar la función playSound para manejar mejor el audio
+    window.playSound = async function (audio) {
+      if (!isRunning) return;
+
+      return new Promise((resolve) => {
+        audio.currentTime = 0;
+
+        // Intentar reproducir con manejo de errores mejorado
+        const playPromise = audio.play();
+
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              audio.onended = () => {
+                audio.onended = null;
+                resolve();
+              };
+            })
+            .catch((error) => {
+              console.error("Error reproduciendo sonido:", error);
+
+              // Si falla por política de autoplay, esperar un momento y reintentar
+              if (error.name === "NotAllowedError") {
+                setTimeout(() => {
+                  enableAudio();
+                  audio
+                    .play()
+                    .then(() => {
+                      audio.onended = () => {
+                        audio.onended = null;
+                        resolve();
+                      };
+                    })
+                    .catch((e) => {
+                      console.error("Reintento falló:", e);
+                      resolve(); // Continuar de todos modos
+                    });
+                }, 100);
+              } else {
+                resolve(); // Continuar a pesar del error
+              }
+            });
         } else {
-            circle.classList.remove('active');
+          // Para navegadores antiguos
+          audio.onended = () => {
+            audio.onended = null;
+            resolve();
+          };
         }
-        updateActiveCircles();
-    }
-    
-    // Activar todos los círculos a la vez
-    function activateAllCircles() {
-        circles.forEach(circle => {
-            setCircleActive(circle, true);
-        });
-        updateStatus('active', 'Círculos activados');
-    }
-    
-    // Desactivar todos los círculos a la vez
-    function deactivateAllCircles() {
-        circles.forEach(circle => {
-            setCircleActive(circle, false);
-        });
-        updateStatus('idle', 'Círculos desactivados');
-    }
-    
-    // Activar solo círculos amarillos
-    function activateYellowCircles() {
-        setCircleActive(circles[1], true);  // Amarillo 1
-        setCircleActive(circles[2], true);  // Amarillo 2
-        setCircleActive(circles[0], false); // Rojo
-        setCircleActive(circles[3], false); // Verde
-        updateStatus('active', 'Amarillos activados');
-    }
-    
-    // Función mejorada para reproducir beeps de forma confiable
-    async function playBeepWithRetry() {
-        const maxRetries = 3;
-        let retryCount = 0;
-        
-        while (retryCount < maxRetries) {
-            try {
-                // Resetear el audio
-                beepSound.currentTime = 0;
-                
-                // Crear una promesa para manejar el play
-                return new Promise((resolve, reject) => {
-                    beepSound.oncanplaythrough = () => {
-                        const playPromise = beepSound.play();
-                        
-                        if (playPromise !== undefined) {
-                            playPromise
-                                .then(() => {
-                                    // Beep reproducido exitosamente
-                                    setTimeout(() => {
-                                        beepSound.pause();
-                                        resolve(true);
-                                    }, 80); // Beep de 300ms
-                                })
-                                .catch(e => {
-                                    retryCount++;
-                                    if (retryCount >= maxRetries) {
-                                        reject(e);
-                                    } else {
-                                        // Reintentar después de un breve delay
-                                        setTimeout(() => playBeepWithRetry().then(resolve).catch(reject), 0);
-                                    }
-                                });
-                        }
-                    };
-                    
-                    // Forzar carga del audio
-                    beepSound.load();
-                });
-                
-            } catch (error) {
-                retryCount++;
-                if (retryCount >= maxRetries) {
-                    console.error('Error reproduciendo beep después de', maxRetries, 'intentos:', error);
-                    throw error;
-                }
-                await new Promise(resolve => setTimeout(resolve, 80));
-            }
-        }
-    }
-    
-    // Botón Rojo
-    redButton.addEventListener('click', async function() {
-        if (isSequenceRunning) return;
-        isSequenceRunning = true;
-        
-        // Efecto visual del botón
-        redButton.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            redButton.style.transform = 'scale(1)';
-        }, 150);
-        
-        // Activar círculos amarillos
-        activateYellowCircles();
-        updateStatus('running', 'Reproduciendo sonido rojo...');
-        
-        try {
-            // Reproducir sonido rojo
-            redSound.currentTime = 0;
-            await redSound.play();
-            
-            // Mantener amarillos activos hasta que termine el sonido
-            await new Promise(resolve => {
-                redSound.onended = resolve;
-            });
-            
-            // Desactivar todos los círculos
-            deactivateAllCircles();
-            updateStatus('idle', 'Sonido rojo completado');
-            
-        } catch (error) {
-            console.error('Error en botón rojo:', error);
-            updateStatus('idle', 'Error en reproducción');
-        } finally {
-            isSequenceRunning = false;
-        }
-    });
-    
-    // Botón Verde - VERSIÓN MEJORADA
-    greenButton.addEventListener('click', async function() {
-        if (isSequenceRunning) return;
-        isSequenceRunning = true;
-        
-        // Efecto visual del botón
-        greenButton.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            greenButton.style.transform = 'scale(1)';
-        }, 150);
-        
-        try {
-            // Paso 1: Reproducir sonido verde
-            updateStatus('running', 'Reproduciendo sonido verde...');
-            
-            // Asegurar que el sonido verde se reproduzca completamente
-            greenSound.currentTime = 0;
-            
-            // Esperar a que el audio esté listo
-            await new Promise(resolve => {
-                greenSound.oncanplaythrough = resolve;
-                greenSound.load();
-            });
-            
-            await greenSound.play();
-            
-            // Esperar a que termine el sonido verde COMPLETAMENTE
-            await new Promise(resolve => {
-                greenSound.onended = resolve;
-            });
-            
-            // Paso 2: Espera aleatoria entre 1 y waitTimeMax segundos
-            const randomWait = getRandomWaitTime();
-            updateStatus('running', `Esperando ${randomWait/1000}s antes de beeps...`);
-            waitTime.textContent = `${randomWait/1000} segundos`;
-            
-            // Mostrar cuenta regresiva
-            let remaining = randomWait / 1000;
-            const countdownInterval = setInterval(() => {
-                remaining -= 0.1;
-                if (remaining <= 0) {
-                    clearInterval(countdownInterval);
-                }
-            }, 100);
-            
-            await new Promise(resolve => setTimeout(resolve, randomWait));
-            clearInterval(countdownInterval);
-            
-            // Paso 3: Reproducir 4 beeps CONFIABLES y activar círculos
-            updateStatus('running', 'Iniciando secuencia de beeps...');
-            
-            // Activar y desactivar todos los círculos rápidamente para "resetear"
-            deactivateAllCircles();
-            
-            for (let i = 0; i < 4; i++) {
-                try {
-                    // Activar círculo ANTES del beep
-                    setCircleActive(circles[i], true);
-                    
-                    // Pequeña pausa para asegurar que se vea activado
-                    await new Promise(resolve => setTimeout(resolve, 0));
-                    
-                    // Reproducir beep con sistema de reintentos
-                    await playBeepWithRetry();
-                    
-                    // Pequeña pausa entre beeps
-                    if (i < 3) {
-                        await new Promise(resolve => setTimeout(resolve, 10));
-                    }
-                    
-                } catch (error) {
-                    console.error(`Error en beep ${i + 1}:`, error);
-                    // Continuar con el siguiente beep a pesar del error
-                    if (i < 3) {
-                        await new Promise(resolve => setTimeout(resolve, 300));
-                    }
-                }
-            }
-            
-            // Paso 4: Mantener todos activos por circleDuration segundos
-            updateStatus('active', `Círculos activos por ${circleDuration/1000}s`);
-            
-            // Temporizador para circleDuration
-            await new Promise(resolve => setTimeout(resolve, circleDuration));
-            
-            // Paso 5: Desactivar todos los círculos simultáneamente
-            deactivateAllCircles();
-            updateStatus('idle', 'Secuencia completada');
-            waitTime.textContent = '-';
-            
-        } catch (error) {
-            console.error('Error en secuencia verde:', error);
-            updateStatus('idle', 'Error en secuencia');
-            deactivateAllCircles();
-        } finally {
-            isSequenceRunning = false;
-        }
-    });
-    
-    // Event listener para el rango de espera (1-10 segundos)
-    waitRange.addEventListener('input', function() {
-        updateWaitRange();
-        waitTime.textContent = `${waitTimeMin}-${waitTimeMax}s`;
-    });
-    
-    // Habilitar audio al primer clic
-    function initAudio() {
-        // Intentar reproducir y pausar para habilitar audio
-        const testSound = new Audio();
-        testSound.volume = 0;
-        
-        testSound.play().then(() => {
-            testSound.pause();
-            console.log('Audio habilitado');
-            
-            // También cargar nuestros audios
-            redSound.load();
-            greenSound.load();
-            beepSound.load();
-        }).catch(e => {
-            console.log('Audio no habilitado, necesitas interactuar:', e);
-        });
-    }
-    
-    // Habilitar audio cuando se haga clic en cualquier parte
-    document.addEventListener('click', function enableAudio() {
-        document.removeEventListener('click', enableAudio);
-        initAudio();
-    });
-    
-    // También habilitar con los botones principales
-    redButton.addEventListener('click', initAudio, { once: true });
-    greenButton.addEventListener('click', initAudio, { once: true });
-    
-    // Manejar errores de audio
-    redSound.onerror = greenSound.onerror = beepSound.onerror = function(e) {
-        console.error('Error cargando audio:', e);
-        updateStatus('idle', 'Error: Sonidos no encontrados');
-        
-        // Crear sonidos de fallback si no se encuentran los archivos
-        if (!redSound.src || redSound.error) {
-            console.log('Usando sonido de fallback');
-        }
+      });
     };
-    
-    // Inicializar la aplicación
-    initValues();
-    
-    // Información en consola
-    console.log('Sistema de Control de Secuencia iniciado');
-    console.log('Configuración:');
-    console.log('- Tiempo de espera:', waitTimeMin + '-' + waitTimeMax + 's');
-    console.log('- Duración círculos:', circleDuration/1000 + 's');
-    console.log('- Volumen:', volumeControl.value);
-    
-    // Precargar audios
-    setTimeout(() => {
-        redSound.load();
-        greenSound.load();
-        beepSound.load();
+  }
+  // Actualizar UI con configuración
+  function updateUI() {
+    waitRange.value = config.waitTimeMax;
+    waitValue.textContent = `${config.waitTimeMax}s`;
+
+    durationControl.value = config.circleDuration / 1000;
+    durationValue.textContent = `${config.circleDuration / 1000}s`;
+
+    volumeControl.value = config.volume;
+    volumeValue.textContent = `${Math.round(config.volume * 100)}%`;
+
+    autoStartToggle.checked = config.autoStart;
+    autoStartValue.textContent = config.autoStart ? "Activado" : "Desactivado";
+
+    autoMinutes.value = config.autoMinutes;
+    autoSeconds.value = config.autoSeconds;
+
+    autoTimeContainer.style.display = config.autoStart ? "block" : "none";
+  }
+
+  // Actualizar rango de espera
+  function updateWaitRange() {
+    config.waitTimeMax = parseInt(waitRange.value);
+    waitValue.textContent = `${config.waitTimeMax}s`;
+  }
+
+  // Actualizar duración
+  function updateDuration() {
+    config.circleDuration = parseInt(durationControl.value) * 1000;
+    durationValue.textContent = `${durationControl.value}s`;
+  }
+
+  // Actualizar volumen
+  function updateVolume() {
+    config.volume = parseFloat(volumeControl.value);
+    volumeValue.textContent = `${Math.round(config.volume * 100)}%`;
+    greenSound.volume = config.volume;
+    beepSound.volume = config.volume;
+    beepFinalound.volume = config.volume;
+  }
+
+  // Alternar auto inicio
+  function toggleAutoStart() {
+    config.autoStart = autoStartToggle.checked;
+    autoStartValue.textContent = config.autoStart ? "Activado" : "Desactivado";
+    autoTimeContainer.style.display = config.autoStart ? "block" : "none";
+
+    if (config.autoStart) {
+      startAutoStart();
+    } else {
+      cancelAutoStart();
+    }
+  }
+
+  // Actualizar tiempo auto inicio
+  function updateAutoTime() {
+    config.autoMinutes = parseInt(autoMinutes.value) || 0;
+    config.autoSeconds = parseInt(autoSeconds.value) || 0;
+
+    // Validar valores
+    if (config.autoMinutes < 0) config.autoMinutes = 0;
+    if (config.autoMinutes > 10) config.autoMinutes = 10;
+    if (config.autoSeconds < 0) config.autoSeconds = 0;
+    if (config.autoSeconds > 59) config.autoSeconds = 59;
+
+    autoMinutes.value = config.autoMinutes;
+    autoSeconds.value = config.autoSeconds;
+  }
+
+  // Iniciar auto inicio
+  function startAutoStart() {
+    if (!config.autoStart || isRunning) return;
+
+    cancelAutoStart(); // Cancelar cualquier temporizador existente
+
+    // Calcular tiempo total en segundos
+    currentAutoTime = config.autoMinutes * 60 + config.autoSeconds;
+
+    // Mostrar temporizador
+    autoTimer.classList.add("active");
+    updateTimerDisplay();
+
+    // Iniciar cuenta regresiva
+    autoStartInterval = setInterval(() => {
+      currentAutoTime--;
+      updateTimerDisplay();
+
+      if (currentAutoTime <= 0) {
+        clearInterval(autoStartInterval);
+        autoTimer.classList.remove("active");
+
+        // Iniciar secuencia automáticamente
+        if (!isRunning) {
+          startSequence();
+        }
+
+        // Reiniciar auto inicio si sigue activado
+        if (config.autoStart) {
+          setTimeout(() => startAutoStart(), 1000);
+        }
+      }
     }, 1000);
+  }
+
+  // Cancelar auto inicio
+  function cancelAutoStart() {
+    if (autoStartInterval) {
+      clearInterval(autoStartInterval);
+      autoStartInterval = null;
+    }
+
+    if (autoStartTimeout) {
+      clearTimeout(autoStartTimeout);
+      autoStartTimeout = null;
+    }
+
+    autoTimer.classList.remove("active");
+    currentAutoTime = 0;
+  }
+
+  // Actualizar display del temporizador
+  function updateTimerDisplay() {
+    const minutes = Math.floor(currentAutoTime / 60);
+    const seconds = currentAutoTime % 60;
+    timerValue.textContent = `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  // Guardar configuración
+  function saveConfiguration() {
+    updateWaitRange();
+    updateDuration();
+    updateVolume();
+    updateAutoTime();
+
+    saveConfigToStorage();
+    configPanel.classList.remove("active");
+
+    // Reiniciar auto inicio si está activado
+    if (config.autoStart) {
+      startAutoStart();
+    } else {
+      cancelAutoStart();
+    }
+
+    console.log("Configuración guardada:", config);
+  }
+
+  // Alternar secuencia (iniciar/detener)
+  async function toggleSequence() {
+    if (isRunning) {
+      stopSequence();
+    } else {
+      await startSequence();
+    }
+  }
+
+  // Iniciar secuencia
+  async function startSequence() {
+    if (isRunning) return;
+
+    isRunning = true;
+    mainButton.classList.add("stop");
+    mainButton.innerHTML =
+      '<i class="fas fa-stop"></i><span class="btn-text">DETENER</span>';
+
+    // Cancelar auto inicio temporalmente
+    cancelAutoStart();
+
+    try {
+      // Desactivar todas las luces
+      deactivateAllLights();
+
+      // Paso 1: Reproducir sonido verde
+      await playSound(greenSound);
+
+      // Paso 2: Espera aleatoria (1 a waitTimeMax segundos)
+      const randomWait = getRandomWaitTime();
+      await wait(randomWait);
+
+      // Paso 3: Reproducir 4 beeps y activar luces
+      for (let i = 0; i < 4; i++) {
+        if (!isRunning) break; // Verificar si se detuvo
+        if (i != 3) {
+          await playSound(beepSound);
+          // await wait(0); // Pequeña pausa entre beeps
+        }
+        setLightActive(lights[i], true);
+      }
+      await playSound(beepFinalound);
+
+      // Paso 4: Mantener todas activas por circleDuration
+      if (isRunning) {
+        await wait(config.circleDuration);
+      }
+
+      // Paso 5: Desactivar todas las luces
+      deactivateAllLights();
+    } catch (error) {
+      console.error("Error en secuencia:", error);
+    } finally {
+      if (isRunning) {
+        stopSequence();
+      }
+
+      // Reactivar auto inicio si está configurado
+      if (config.autoStart) {
+        startAutoStart();
+      }
+    }
+  }
+
+  // Detener secuencia
+  function stopSequence() {
+    isRunning = false;
+    mainButton.classList.remove("stop");
+    mainButton.innerHTML =
+      '<i class="fas fa-play"></i><span class="btn-text">INICIAR</span>';
+
+    // Detener sonidos
+    greenSound.pause();
+    greenSound.currentTime = 0;
+    beepSound.pause();
+    beepSound.currentTime = 0;
+    beepFinalound.pause();
+    beepFinalound.currentTime = 0;
+
+    // Detener temporizadorSound.pause();
+    beepSound.currentTime = 0;
+    // Desactivar todas las luces
+    deactivateAllLights();
+  }
+
+  // Funciones auxiliares
+  function getRandomWaitTime() {
+    const waitSeconds = Math.floor(Math.random() * config.waitTimeMax) + 1;
+    return waitSeconds * 1000;
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function playSound(audio) {
+    if (!isRunning) return;
+
+    return new Promise((resolve) => {
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            audio.onended = resolve;
+          })
+          .catch((error) => {
+            console.error("Error reproduciendo sonido:", error);
+            resolve(); // Continuar a pesar del error
+          });
+      }
+    });
+  }
+
+  function setLightActive(light, active) {
+    if (active) {
+      light.classList.add("active");
+    } else {
+      light.classList.remove("active");
+    }
+  }
+
+  function deactivateAllLights() {
+    lights.forEach((light) => {
+      setLightActive(light, false);
+    });
+  }
+
+  // Inicializar aplicación
+  init();
 });
